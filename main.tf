@@ -27,7 +27,7 @@ resource "aws_vpc" "tokyo-vpc" {
 
 # Create Internet Gateway
 resource "aws_internet_gateway" "tokyo-igw" {
-  vpc_id = aws_vpc.tokyo-vpc.id
+  vpc_id = aws_vpc.virginia-vpc.id
   tags = {
     Name = var.internet-gateway
   }
@@ -36,14 +36,14 @@ resource "aws_internet_gateway" "tokyo-igw" {
 
 # Create Route Tables
 resource "aws_route_table" "tokyo-public-route" {
-  vpc_id = aws_vpc.tokyo-vpc.id
+  vpc_id = aws_vpc.virginia-vpc.id
   tags = {
     Name = var.route-table["public"]
   }
 }
 
 # Create Internet route access
-resource "aws_route" "tokyo-internet-route" {
+resource "aws_route" "virginia-internet-route" {
   route_table_id         = aws_route_table.tokyo-public-route.id
   destination_cidr_block = var.allIPsCIDRblock
   gateway_id             = aws_internet_gateway.tokyo-igw.id
@@ -60,14 +60,14 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = var.mapPublicIP
   
   tags = {
-    Name        = "tokyo-subnets-${count.index}"
+    Name        = "virginia-subnets-${count.index}"
   }
 }
 
 # Create Network Access Control Lists
 resource "aws_network_acl" "tokyo-nacl" {
   count  = length(var.private_subnet)
-  vpc_id = aws_vpc.tokyo-vpc.id
+  vpc_id = aws_vpc.virginia-vpc.id
   subnet_ids = [aws_subnet.private[count.index].id]
     # allow ingress HTTP from port  80 all IPs
   ingress {
@@ -89,14 +89,14 @@ resource "aws_network_acl" "tokyo-nacl" {
     to_port    = 65535
   }
     tags = {
-      Name = "tokyo-sg-${count.index}"
+      Name = "virginia-sg-${count.index}"
     }
   }
 
 # Create Security Groups
 resource "aws_security_group" "tokyo-securitygroup" {
   count  = 2
-  vpc_id = aws_vpc.tokyo-vpc.id
+  vpc_id = aws_vpc.virginia-vpc.id
 
   # allow ingress HTTP from port  80 all IPs
   ingress {
@@ -169,13 +169,13 @@ resource "aws_security_group" "tokyo-securitygroup" {
     protocol    = "tcp"
   }
   tags = {
-    Name = "tokyo-sg-${count.index}"
+    Name = "virginia-sg-${count.index}"
   }
 }
 
 
 # Associate Route Tables with Subnets
-resource "aws_route_table_association" "tokyo-rt-association" {
+resource "aws_route_table_association" "virginia-rt-association" {
   count          = 2
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.tokyo-public-route.id
